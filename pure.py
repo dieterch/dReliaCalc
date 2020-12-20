@@ -56,7 +56,7 @@ def main():
         # demonstrated_Reliabillity_Plot(beta=1.21, T=20000, s=1000, cl=[0.1, 0.5, 0.9])
         nofail = pd.DataFrame([])
         pl.demonstrated_Reliabillity_Plot(
-            vl, beta=1.21, T=10000, s=1000, ft=nofail, cl=[10, 50, 90])
+            vl, beta=1.4, T=10000, s=1000, ft=nofail, cl=[10, 50, 90])
 
         logging.info('CUI dmyplantlication Run successfully completed.')
 
