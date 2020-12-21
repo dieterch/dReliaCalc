@@ -65,7 +65,7 @@ class MyPlant(object):
             }
             loop = 1
             try:
-                while loop < 4:
+                while loop < 3:
                     response = self._session.post(burl + "/auth",
                                                   data=json.dumps(body), headers=headers)
                     if response.status_code == 200:
@@ -85,6 +85,7 @@ class MyPlant(object):
                 raise
 
     def logout(self):
+        """Logout from Myplant and release self._session"""
         if self._session != None:
             self._session.close()
             self._session = None
@@ -139,18 +140,19 @@ class MyPlant(object):
                      for x in ds[sub_key] if x['name'] == data_item_name}
             return local.pop() if len(local) != 0 else None
 
-    def d(self, ts):
-        return pd.Timestamp(ts, unit='s')
+    # def d(self, ts):
+    #     return pd.Timestamp(ts, unit='s')
 
-    def future_timestamp(self, ts, hours):
-        return int(ts + hours * 3600.0)
+    # def future_timestamp(self, ts, hours):
+    #     return int(ts + hours * 3600.0)
 
-    def to_myplant_ts(self, ts):
-        return int(ts * 1000.0)
+    # def to_myplant_ts(self, ts):
+    #     return int(ts * 1000.0)
 
-    def from_myplant_ts(self, ts):
-        return int(ts / 1000.0)
+    # def from_myplant_ts(self, ts):
+    #     return int(ts / 1000.0)
 
     @property
     def caching(self):
+        """the current cache time"""
         return self._caching
