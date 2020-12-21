@@ -7,6 +7,3 @@ from dmyplant.dEngine import Engine, EngineReadOnly
 import dmyplant.dReliability
 from dmyplant.dExcelHandler import ExcelHandler
 from dmyplant.dPlot import demonstrated_Reliabillity_Plot
-
-mp = None
-vl = None

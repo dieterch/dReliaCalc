@@ -100,7 +100,7 @@ def demonstrated_Reliabillity_Plot(vl, beta=1.21, T=20000, s=1000, ft=pd.DataFra
         rel[max(cl)][int((vl.now_ts-v_ts)/(l_ts - v_ts)*s)])
     myrel_x = datetime.fromtimestamp(vl.now_ts)
     ax1.scatter(myrel_x, myrel_y, marker='o', color='black', label='point')
-    txt = f"CL {max(cl)}%\nbeta={b}\nR={myrel_y:.1f}%"
+    txt = f"CL {max(cl)}%@{30000}\nbeta={b}\nR={myrel_y:.1f}%"
     # txt = 'ttt'
     myrel_txt_x = datetime.fromtimestamp(vl.now_ts + 200000)
     ax1.text(myrel_txt_x, myrel_y - 9, txt)

@@ -9,11 +9,18 @@ import pickle
 import pandas as pd
 
 
-def cts(ts) -> float:
+def epoch_ts(ts) -> float:
     if ts >= 10000000000.0:
-        return ts/1000.0
+        return float(ts/1000.0)
     else:
         return float(ts)
+
+
+def mp_ts(ts) -> float:
+    if ts >= 10000000000.0:
+        return float(ts)
+    else:
+        return float(ts * 1000.0)
 
 
 class MyPlantException(Exception):

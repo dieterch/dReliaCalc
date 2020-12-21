@@ -10,11 +10,22 @@ PATCH = False
 
 
 class ExcelHandler:
+    """
+    Handle Excel In/Out put
+    wrapping xlwings
+    CAUTION: specific EXCEL File Format required.
+
+    see ndreliacalc4.xlsx
+    """
     _wb = None
     _val = None
     _dat = None
 
     def __init__(self, VAL):
+        """
+        Open Excel Workbook VAL and check BC's
+        e.g.: xl = ExcelHandler(VAL)
+        """
         f = os.getcwd() + '/' + VAL
 
         if PATCH:
@@ -45,35 +56,63 @@ class ExcelHandler:
                 raise
 
     def openfile(self):
+        """
+        opens the VAL File
+        writes "'Update in progress' into Excelsheet ndashboard Cell B2"
+        returns content of "validation" sheet as pandas DataFrame 
+        """
         # xl.names()
-        self.write('ndashboard', 'B2', 'Update in progress')
-        dval = self.val
-        cacheing = self.cacheing
-        return (dval, cacheing)
+        self._write('ndashboard', 'B2', 'Update in progress')
+        return (self.val, self.cacheing)
 
     @property
     def val(self):
+        """
+        returns content of "validation" sheet as pandas DataFrame         
+        """
         self._val = self._wb.sheets['validation'].range('A1') \
             .options(pd.DataFrame, header=1, index=False, numbers=int, expand='table').value
         return self._val
 
     @property
     def cacheing(self):
-        return int(self.read('ndashboard', 'F2'))
-        # return int(self._wb.sheets['dashboard'].range('E2').value)
+        """
+        reads Cell F2 in 'validation' and
+        returns this value as cacheing time
+        """
+        return int(self._read('ndashboard', 'F2'))
 
-    def read(self,  Sheet, Cell,):
+    def _read(self,  Sheet, Cell):
+        """
+        internal
+        _read(sheet, cell) function
+        """
         return self._wb.sheets(Sheet).range(Cell).value
 
-    def write(self, Sheet, Cell, Value):
+    def _write(self, Sheet, Cell, Value):
+        """
+        internal
+        _write(sheet, cell, value) function
+        """
         self._wb.sheets(Sheet).range(Cell).value = Value
 
     def names(self):
+        """
+        print defined Names in EXCEL
+        implemented for debug reasons
+        """
         names = [name.name for name in self._wb.names]
         for name in names:
             print(f"{name} {self._wb.names[name].refers_to}")
 
     def UpdateNames(self, rows):
+        """
+        change Excel Names content
+        implemented for debug resons
+        originally meant to change Data Areas
+        according to the Validation Input
+        works with extended, provisioned areas too. 
+        """
         data_rv = str(rows + 4)
         prop_rv = str(rows + 4)
         val_rv = str(rows + 1)
@@ -85,29 +124,22 @@ class ExcelHandler:
         self._wb.names.add('val_val', "=validation!$A$2:$F$" + val_rv)
 
     def UpdateVAL(self, vl):
-        logging.info(f"Copying properties ...")
-        prop = vl.properties
-        logging.info(f"Copying properties dictionary ...")
-        properties_dict = vl.properties_dict
-        # pp(properties_dict)  # print properties_dict to Terminal
-
-        logging.info(f"Copying dataItems ...")
-        dataItems = vl.dataItems
-        logging.info(f"Copying dataItems dictionary ...")
-        dataItems_dict = vl.dataItems_dict
-        # pp(dataItems_dict)  # print dataitems_dict to Terminal
-        # logging.info(f"Populate Excel dashboard ...")
-
+        """
+        Write the data into the EXCEL
+        inform about progress on command line ....
+        Write "Date & Time into Excelsheet ndashboard Cell B2"
+        """
         # xl.write('dashboard', 'A4', dash)
-        logging.info(f"Populate Excel properties ...")
-        self.write('properties', 'A4', prop)
-        logging.info(f"Populate Excel dataitems ...")
-        self.write('dataItems', 'A4', dataItems)
-        logging.info(f"Populate Excel dictionaries ...")
-        self.write('dictionary', 'H3', properties_dict)
-        self.write('dictionary', 'P3', dataItems_dict)
+        logging.info(f"Copy properties to Excel ...")
+        self._write('properties', 'A4', vl.properties)
+        logging.info(f"Copy dataItems to Excel ...")
+        self._write('dataItems', 'A4', vl.dataItems)
+        logging.info(f"Copy properties keys in dictionary ...")
+        self._write('dictionary', 'H3', vl.properties_keys)
+        logging.info(f"Copy dataItems keys in dictionary ...")
+        self._write('dictionary', 'P3', vl.dataItems_keys)
 
         # xl.UpdateNames(100)
-
+        # Update current date
         today = datetime.now()
-        self.write('ndashboard', 'B2', today)
+        self._write('ndashboard', 'B2', today)

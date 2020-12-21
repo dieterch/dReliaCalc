@@ -24,7 +24,7 @@ VAL = 'ndReliaCalc4.xlsx'
 def main():
     try:
         logging.info('---')
-        logging.info('dmyplant Application Started')
+        logging.info('dReliaCalc Application Started')
 
         xl = ExcelHandler(VAL)
         dval, cacheing = xl.openfile()
@@ -42,7 +42,7 @@ def main():
 
         xl.UpdateVAL(vl)
 
-        logging.info('dmyplantlication successfully completed.')
+        logging.info('dReliaCalc successfully completed.')
         logging.info('---')
 
     except Exception as e:

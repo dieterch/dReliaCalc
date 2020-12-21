@@ -1,10 +1,7 @@
 ﻿from datetime import datetime, timedelta
 from pprint import pprint as pp
 import pandas as pd
-import xlwings as xw
-# if __name__ != '__main__':
-#     import dmyplant
-from dmyplant.dMyplant import cts
+from dmyplant.dMyplant import epoch_ts
 import sys
 import os
 import pickle
@@ -17,12 +14,13 @@ class Engine(object):
         mp  .. MyPlant Object
         eng .. Pandas Validation Input DataFrame
     """
-    sn = 0
-    picklefile = ''
+    _sn = 0
+    _picklefile = ''
     _properties = {}
     _dataItems = {}
     _k = None
     _P = 0.0
+    _d = {}
 
     def __init__(self, mp, eng):
         """ Engine Constructor
@@ -30,40 +28,40 @@ class Engine(object):
             load Instance Data from Myplant
             if Myplant Cache Time is passed"""
 
-        # read engine Myplant Serial Number from Validation Definition
+        # take engine Myplant Serial Number from Validation Definition
         self._mp = mp
-        self.sn = str(eng['serialNumber'])
-        fname = os.getcwd() + '/data/' + self.sn
-        self.picklefile = fname + '.pkl'    # load persitant data
-        self.lastcontact = fname + '_lastcontact.pkl'
+        self._sn = str(eng['serialNumber'])
+        fname = os.getcwd() + '/data/' + self._sn
+        self._picklefile = fname + '.pkl'    # load persitant data
+        self._lastcontact = fname + '_lastcontact.pkl'
         try:
-            with open(self.lastcontact, 'rb') as handle:
+            with open(self._lastcontact, 'rb') as handle:
                 self._last_fetch_date = pickle.load(handle)
         except:
             pass
         try:
             # fetch data from Myplant only on conditions below
-            if self._cache_expired()['bool'] or (not os.path.exists(self.picklefile)):
-                local_asset = self._mp.asset_data(self.sn)
+            if self._cache_expired()['bool'] or (not os.path.exists(self._picklefile)):
+                local_asset = self._mp.asset_data(self._sn)
                 logging.debug(
                     f"{eng['Validation Engine']}, Engine Data fetched from Myplant")
                 self.asset = self._restructure(local_asset)
-                self.d = self._engine_data(eng)
-                self.Name = eng['Validation Engine']
-                self.set_oph_parameter()
-                self._last_fetch_date = cts(datetime.now().timestamp())
+                self._d = self._engine_data(eng)
+                self._set_oph_parameter()
+                self._last_fetch_date = epoch_ts(datetime.now().timestamp())
                 self._save()
             else:
-                with open(self.picklefile, 'rb') as handle:
+                with open(self._picklefile, 'rb') as handle:
                     self.__dict__ = pickle.load(handle)
         except FileNotFoundError:
             logging.debug(
-                f"{self.picklefile} not found, fetch Data from MyPlant Server")
+                f"{self._picklefile} not found, fetch Data from MyPlant Server")
         else:
             logging.debug(
-                f"{__name__}: in cache mode, load data from {self.sn}.pkl")
+                f"{__name__}: in cache mode, load data from {self._sn}.pkl")
         finally:
-            logging.debug(f"Initialize Engine Object, SerialNumber: {self.sn}")
+            logging.debug(
+                f"Initialize Engine Object, SerialNumber: {self._sn}")
 
     @property
     def time_since_last_server_contact(self):
@@ -93,17 +91,18 @@ class Engine(object):
             d['name']: d for d in local_asset['dataItems']}
         return local_asset
 
-    def set_oph_parameter(self):
+    def _set_oph_parameter(self):
         """
+        internal
         Calculate line parameters, oph - line
         """
-        self._k = float(self.d['oph parts']) / \
+        self._k = float(self._d['oph parts']) / \
             (self._lastDataFlowDate - self._valstart_ts)
 
     def oph(self, ts):
         """
         linear inter- and extrapolation of oph(t)
-        t -> timestamp
+        t -> epoch timestamp
         """
         y = self._k * (ts - self._valstart_ts)
         y = y if y > 0.0 else 0.0
@@ -111,6 +110,7 @@ class Engine(object):
 
     def _engine_data(self, eng) -> dict:
         """
+        internal
         Extract basic Engine Data
         pd.DataFrame eng, Validation Definition
         """
@@ -131,88 +131,144 @@ class Engine(object):
                 dd[ditem] = self.get_data(key, ditem)
 
         dd['Name'] = eng['Validation Engine']
+        self.Name = eng['Validation Engine']
         dd['P'] = int(str(dd['Engine Type'])[-2:])
         self._P = dd['P']
         dd['val start'] = eng['val start']
         dd['oph@start'] = eng['oph@start']
         # add calculated items
         dd = calc_values(dd)
-        self._valstart_ts = cts(dd['val start'].timestamp())
-        self._lastDataFlowDate = cts(dd['status'].get(
+        self._valstart_ts = epoch_ts(dd['val start'].timestamp())
+        self._lastDataFlowDate = epoch_ts(dd['status'].get(
             'lastDataFlowDate', None))
         return dd
 
     def _save(self):
         """
+        internal
         Persistant data storage to Pickle File
         """
         try:
-            with open(self.lastcontact, 'wb') as handle:
+            with open(self._lastcontact, 'wb') as handle:
                 pickle.dump(self._last_fetch_date, handle, protocol=4)
         except FileNotFoundError:
-            errortext = f'File {self.lastcontact} not found.'
+            errortext = f'File {self._lastcontact} not found.'
             logging.error(errortext)
         try:
-            with open(self.picklefile, 'wb') as handle:
+            with open(self._picklefile, 'wb') as handle:
                 pickle.dump(self.__dict__, handle, protocol=4)
         except FileNotFoundError:
-            errortext = f'File {self.picklefile} not found.'
+            errortext = f'File {self._picklefile} not found.'
             logging.error(errortext)
             # raise Exception(errortext)
 
     def get_data(self, key, item):
         """
         Get Item Value by Key, Item Name pair
-        valid Keys are
+        valid Myplant Keys are
         'nokey' data Item in Asset Date base structure
         'properties' data Item is in 'properties' list
         'dataItems' data Item is in 'dataItems' list
+
+        e.g.: oph = e.get_data('dataItms','Count_OpHour')
         """
         return self.asset.get(item, None) if key == 'nokey' else self.asset[key].setdefault(item, {'value': None})['value']
 
     def get_property(self, item):
         """
         Get properties Item Value by Item Name
+
+        e.g.: vers = e.get_property("Engine Version")
         """
         return self.get_data('properties', item)
 
     def get_dataItem(self, item):
         """
         Get  dataItems Item Value by Item Name
+
+        e.g.: vers = e.get_dataItem("Monic_VoltCyl01")
         """
         return self.get_data('dataItems', item)
 
-    @ property
+    @property
+    def id(self):
+        """
+        MyPlant Asset id
+
+        e.g.: id = e.id
+        """
+        return self._d['id']
+
+    @property
+    def serialNumber(self):
+        """
+        MyPlant serialNumber
+        e.g.: serialNumber = e.serialNumber
+        """
+        return self._d['serialNumber']
+
+    @property
     def P(self):
+        """
+        Number of Parts
+        e.g.: m = e.P
+        """
         return self._P
 
-    @ property
+    @property
     def properties(self):
+        """
+        properties dict
+        e.g.: prop = e.properties
+        """
         return self.asset['properties']
 
-    @ property
+    @property
     def dataItems(self):
+        """
+        dataItems dict
+        e.g.: dataItems = e.dataItems
+        """
         return self.asset['dataItems']
 
-    @ property
+    @property
     def valstart_ts(self):
+        """
+        Individual Validation Start Date
+        as EPOCH timestamp
+        e.g.: vs = e.valstart_ts
+        """
         return self._valstart_ts
+
+    @ property
+    def now_ts(self):
+        """
+        Actual Date & Time
+        as EPOCH timestamp
+        e.g.: now = e.now_ts
+        """
+        return datetime.now().timestamp()
 
 
 class EngineReadOnly(Engine):
-    """ Read Only Version Engine"""
+    """
+    Inherited Read Only Engine Object
+    Constructor uses SerialNumber
+    e.g.: e = EngineReadOnly('1386177')
+    """
 
     def __init__(self, sn):
-        """ Engine Constructor
-        load Instance from Pickle File"""
-        self
-        self.sn = str(sn)
-        self.picklefile = os.getcwd() + '../data/' + self.sn + '.pkl'
+        """
+        ReadOnly Engine Constructor
+        load Instance from Engine Pickle File
+        """
+        self._sn = str(sn)
+        self._picklefile = os.getcwd() + '/data/' + self._sn + '.pkl'
         try:
-            with open(self.picklefile, 'rb') as handle:
-                self.__dict__.update(pickle.load(handle))
+            with open(self._picklefile, 'rb') as handle:
+                self.__dict__ = pickle.load(handle)
         except FileNotFoundError:
-            logging.debug(f"{self.picklefile} not found.")
+            logging.debug(f"{self._picklefile} not found.")
 
 
 if __name__ == '__main__':
@@ -220,9 +276,13 @@ if __name__ == '__main__':
     import dmyplant
 
     try:
-        eng = EngineReadOnly('1386177')
-        pp(eng.__dict__)
+        e = EngineReadOnly('1386177')
+        print(
+            f"Dump Json File of Engine {e.Name}, SerialNumber {e.serialNumber}, Asset id {e.id}")
+        print(e.valstart_ts)
+        with open(os.getcwd() + '/data/' + e.serialNumber + '.json', 'w') as fp:
+            json.dump(e.asset, fp)
 
-    except Exception as e:
-        print(e)
-        traceback.print_tb(e.__traceback__)
+    except Exception as ex:
+        print(ex)
+        traceback.print_tb(ex.__traceback__)
