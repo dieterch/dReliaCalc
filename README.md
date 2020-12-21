@@ -1,4 +1,4 @@
-# dMyplant
+# dReliaCalc
 
 > Python Interface to INNIO MyPlant.
 
@@ -13,8 +13,8 @@ Calculate demonstrated Reliability based on Success run Method and Lipson Equali
 Windows, OS X & Linux:
 
 ```sh
-pip install dMyPlant
-conda install dMyPlant
+pip install dReliaCalc
+conda install dReliaCalc
 ```
 
 ---
