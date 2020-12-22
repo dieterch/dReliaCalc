@@ -77,7 +77,7 @@ def demonstrated_Reliabillity_Plot(vl, beta=1.21, T=20000, s=1000, ft=pd.DataFra
 
     le = vl.engines[:]
     for e in le:
-        # print(e.Name, e.d['Engine ID'], e.d['val start'], e.d['oph parts'])
+        print(e.Name, e._d['Engine ID'], e._d['val start'], e._d['oph parts'])
         y = [e.oph(t) for t in tr]
         ax2.plot(dtr, y, linewidth=0.5, color=fcol)
         n_y = [e.oph(t) for t in n_tr]
