@@ -29,7 +29,7 @@ class Validation:
     _val = None
     _engines = []
 
-    def __init__(self, mp, dval):
+    def __init__(self, mp, dval, show_progress=False):
         """ Myplant Validation object
             collects and provides the engines list.
             compiles a dashboard as pandas DataFrame
@@ -43,10 +43,13 @@ class Validation:
 
         engines = self._val.to_dict('records')
         # create and initialise all Engine Instances
+        self._engines = []
         for eng in engines:
             self._engines.append(Engine(mp, eng))
-            logging.info(
-                f"{eng['n']} {eng['serialNumber']} {eng['Validation Engine']}")
+            log = f"{eng['n']} {eng['serialNumber']} {eng['Validation Engine']}"
+            logging.info(log)
+            if show_progress:
+                print(log)
 
         # iterate over engines and columns
         ldash = [[e._d[c] for c in self._dashcols] for e in self._engines]
