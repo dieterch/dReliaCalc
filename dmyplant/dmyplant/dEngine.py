@@ -1,7 +1,8 @@
 ﻿from datetime import datetime, timedelta
+import math
 from pprint import pprint as pp
 import pandas as pd
-from dmyplant.dMyplant import epoch_ts
+from dmyplant.dMyplant import epoch_ts, mp_ts
 import sys
 import os
 import pickle
@@ -46,10 +47,7 @@ class Engine(object):
                 logging.debug(
                     f"{eng['Validation Engine']}, Engine Data fetched from Myplant")
                 self.asset = self._restructure(local_asset)
-                self._d = self._engine_data(eng)
-                self._set_oph_parameter()
                 self._last_fetch_date = epoch_ts(datetime.now().timestamp())
-                self._save()
             else:
                 with open(self._picklefile, 'rb') as handle:
                     self.__dict__ = pickle.load(handle)
@@ -62,6 +60,12 @@ class Engine(object):
         finally:
             logging.debug(
                 f"Initialize Engine Object, SerialNumber: {self._sn}")
+            self._d = self._engine_data(eng)
+            self._set_oph_parameter()
+            self._save()
+
+    def __str__(self):
+        return f"{self._sn} {self._d['Engine ID']} {self.Name[:20] + (self.Name[20:] and ' ..'):23s}"
 
     @property
     def time_since_last_server_contact(self):
@@ -189,6 +193,36 @@ class Engine(object):
         e.g.: vers = e.get_dataItem("Monic_VoltCyl01")
         """
         return self.get_data('dataItems', item)
+
+    def historical_dataItem(self, itemId, timestamp):
+        """
+        Get historical dataItem
+        dataItemId  int64   Id of the DataItem to query.
+        timestamp   int64   Optional,  timestamp in the DataItem history to query for.
+        """
+        try:
+            res = self._mp.historical_dataItem(
+                self.id, itemId, mp_ts(timestamp)).get('value', None)
+        except:
+            res = None
+        return res
+
+    def batch_hist_dataItem(self, itemId, p_from, p_to, timeCycle=3600):
+        """
+        Get np.array of dataItem history 
+        dataItemId  int64   Id of the DataItem to query.
+        p_from      int64   timestamp start timestamp.
+        p_to        int64   timestamp stop timestamp.
+        timeCycle   int64   interval in seconds.
+        """
+        try:
+            res = self._mp.history_dataItem(
+                self.id, itemId, mp_ts(p_from), mp_ts(p_to), timeCycle)
+            df = pd.DataFrame(res)
+            df.columns = ['timestamp', str(itemId)]
+            return df
+        except:
+            pass
 
     @property
     def id(self):

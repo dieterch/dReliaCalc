@@ -16,11 +16,11 @@ def epoch_ts(ts) -> float:
         return float(ts)
 
 
-def mp_ts(ts) -> float:
+def mp_ts(ts) -> int:
     if ts >= 10000000000.0:
-        return float(ts)
+        return int(ts)
     else:
-        return float(ts * 1000.0)
+        return int(ts * 1000.0)
 
 
 class MyPlantException(Exception):
@@ -114,8 +114,8 @@ class MyPlant(object):
             raise
 
     def asset_data(self, serialNumber):
-        """ 
-        Returns an Asset based on its id with all details 
+        """
+        Returns an Asset based on its id with all details
         including properties and DataItems.
 
         Parameters:
@@ -127,7 +127,7 @@ class MyPlant(object):
         return self.fetchdata(url=r"/asset?assetType=J-Engine&serialNumber=" + str(serialNumber))
 
     def historical_dataItem(self, id, itemId, timestamp):
-        """ 
+        """
         url: /asset/{assetId}/dataitem/{dataItemId}
         Parameters:
         Name	    type    Description
@@ -137,6 +137,19 @@ class MyPlant(object):
         highres     Boolean Whether to use high res data. Much slower but gives the raw data.
         """
         return self.fetchdata(url=fr"/asset/{id}/dataitem/{itemId}?timestamp={timestamp}")
+
+    def history_dataItem(self, id, itemId, p_from, p_to, timeCycle=3600):
+        """
+        url: /asset/{assetId}/dataitem/{dataItemId}
+        Parameters:
+        Name	    type    Description
+        assetId     int64   Id of the Asset to query the DateItem for.
+        dataItemId  int64   Id of the DataItem to query.
+        p_from      int64   timestamp start timestamp.
+        p_to        int64   timestamp stop timestamp.
+        timeCycle   int64   interval in seconds.
+        """
+        return self.fetchdata(url=fr"/asset/{id}/history/data?from={p_from}&to={p_to}&assetType=J-Engine&dataItemId={itemId}&timeCycle={timeCycle}&includeMinMax=false&forceDownSampling=false")
 
     def gdi(self, ds, sub_key, data_item_name):
         """Unpack value from Myplant Json datastructure based on key & DataItemName"""

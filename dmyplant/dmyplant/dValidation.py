@@ -45,8 +45,9 @@ class Validation:
         # create and initialise all Engine Instances
         self._engines = []
         for eng in engines:
-            self._engines.append(Engine(mp, eng))
-            log = f"{eng['n']} {eng['serialNumber']} {eng['Validation Engine']}"
+            e = Engine(mp, eng)
+            self._engines.append(e)
+            log = f"{eng['n']:02d} {e}"
             logging.info(log)
             if show_progress:
                 print(log)
