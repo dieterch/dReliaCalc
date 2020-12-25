@@ -1,5 +1,6 @@
 ﻿import dmyplant
-from dmyplant import cred, Validation, MyPlant, ExcelHandler
+from dmyplant import cred, Validation, MyPlant
+from dExcelHandler import ExcelHandler
 import logging
 import sys
 import traceback
