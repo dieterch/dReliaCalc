@@ -26,7 +26,7 @@ logging.getLogger().addHandler(hdlr)
 
 # Validation Excel Workbook Name
 # needs to be in the current working directory
-VAL = 'input.xlsx'
+VAL = 'input.xls'
 
 
 def main():
