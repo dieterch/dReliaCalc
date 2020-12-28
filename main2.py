@@ -19,7 +19,7 @@ logging.getLogger().addHandler(hdlr)
 
 # Validation Excel Workbook Name
 # needs to be in the current working directory
-VAL = 'ndReliaCalcOE.xlsx'
+VAL = 'ndReliaCalc4OE.xlsx'
 
 
 def main():
