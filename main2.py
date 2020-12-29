@@ -1,5 +1,5 @@
-﻿import dmyplant
-from dmyplant import cred, Validation, MyPlant
+﻿import dmyplant2
+from dmyplant2 import cred, Validation, MyPlant
 from dExcelHandler import ExcelHandler
 import logging
 import sys

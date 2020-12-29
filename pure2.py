@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 
 # Load application imports
-import dmyplant
-from dmyplant import cred, Validation, MyPlant, EngineReadOnly, dPlot as pl
+import dmyplant2
+from dmyplant2 import cred, Validation, MyPlant, EngineReadOnly, dPlot as pl
 
 
 logging.basicConfig(
