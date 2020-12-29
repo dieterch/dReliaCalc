@@ -1,5 +1,5 @@
-from dmyplant import cred
-import dmyplant
+from dmyplant2 import cred
+import dmyplant2
 import pandas as pd
 from pprint import pprint as pp
 import sys
@@ -12,13 +12,13 @@ dval['val start'] = pd.to_datetime(dval['val start'], dayfirst=True)
 
 # sys.exit(0)
 
-mp = dmyplant.MyPlant(0)
-vl = dmyplant.Validation(mp, dval, show_progress=True)
+mp = dmyplant2.MyPlant(0)
+vl = dmyplant2.Validation(mp, dval, cui_log=True)
 
 
 failures = pd.DataFrame([])
-dmyplant.demonstrated_Reliabillity_Plot(vl,
-                                        beta=1.21, T=30000, s=1000, ft=failures, cl=[10, 50, 90], factor=2.0)
+dmyplant2.demonstrated_Reliabillity_Plot(vl,
+                                         beta=1.21, T=30000, s=1000, ft=failures, cl=[10, 50, 90], factor=2.0)
 
 
 d = vl.dashboard
