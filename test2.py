@@ -8,8 +8,8 @@ import warnings
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
-lfrom = arrow.get('2021-01-18 00:00').to('Europe/Vienna')
-lto = arrow.get('2021-01-19 00:00').to('Europe/Vienna')
+lfrom = arrow.get('2021-01-01 00:00').to('Europe/Vienna')
+lto = arrow.get('2021-02-01 00:00').to('Europe/Vienna')
 cycle = 1
 
 dmyplant2.cred()  # Ask for credentials every month
@@ -18,18 +18,17 @@ ee = dmyplant2.Engine_SN(mp, '1184199')  # create Engine Class Instance
 print()
 print(ee)
 desc = ee.dash
-pp(ee.dash)
 fn = fr"./data/{ee.serialNumber}_1.hdf"
 
 #dat = mp.load_dataitems_csv("DataItems_Request.csv")
 dat = {
-    # 161: ['CountOph', 'h'],
+    161: ['CountOph', 'h'],
     102: ['PowerAct', 'kW'],
-    # 69: ['Hyd_PressCoolWat', 'bar']
+    69: ['Hyd_PressCoolWat', 'bar']
 }
-del desc['oph parts']
-del desc['val start']
-del desc['oph@start']
+#del desc['oph parts']
+#del desc['val start']
+#del desc['oph@start']
 desc['Timezone'] = 'Europe/Vienna'
 desc['p_from'] = lfrom
 desc['p_to'] = lto
@@ -43,12 +42,13 @@ pp(desc)
 
 print()
 print('Downloading Data from Myplant ...')
-df = mp.hist_data(
-    ee.id,
+df = ee.hist_data(
+    # ee.id,
     dat,
     p_from=lfrom,
     p_to=lto,
-    timeCycle=cycle
+    timeCycle=cycle,
+    slot=0
 )
 
 df.to_hdf(fn, "data", complevel=6)
@@ -56,6 +56,6 @@ df.to_hdf(fn, "data", complevel=6)
 df_desc = pd.DataFrame.from_dict(desc.items()).set_index(0)
 df_desc.columns = ['Values']
 df_desc.index.name = 'Keys'
-pp(df_desc)
+# pp(df_desc)
 df_desc.to_hdf(fn, "description", complevel=6)
 print()

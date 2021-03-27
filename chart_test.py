@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pprint import pprint as pp
+import warnings
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 # Read Input CSV files (Upload first ... )
 dval = pd.read_csv("input2.csv", sep=';', encoding='utf-8')
@@ -47,16 +49,16 @@ e = vl.eng_serialNumber(1225799)
 #id = e.id
 
 # fetch Lube Oil Consuption data
-locdef = {227: 'OilConsumption',
-          237: 'DeltaOpH',
-          228: 'OilVolume',
-          225: 'ActiveEnergy',
-          226: 'AvgPower'}
+locdef = {227: ['OilConsumption', 'g/kWh'],
+          237: ['DeltaOpH', 'h'],
+          228: ['OilVolume', 'l'],
+          225: ['ActiveEnergy', 'MWh'],
+          226: ['AvgPower', 'kW']}
 
 limit = 2500
 
 # call myplant
-df = e.batch_hist_dataItems(itemIds=locdef, p_limit=2500, timeCycle=30)
+df = e._batch_hist_dataItems(itemIds=locdef, p_limit=limit, timeCycle=30)
 
 # Set Type of time column to DateTime
 df['datetime'] = pd.to_datetime(df['time'] * 1000000)
@@ -79,19 +81,19 @@ ax = dfl.plot(subplots=False, x='datetime', secondary_y=[
 ax.set_ylim(1000, 5000)
 
 dat = {
-    161: 'CountOph',
-    102: 'PowerAct',
-    217: 'Hyd_PressCrankCase',
-    16546: 'Hyd_PressOilDif'
+    161: ['CountOph', 'h'],
+    102: ['PowerAct', 'kW'],
+    217: ['Hyd_PressCrankCase', 'mbar'],
+    16546: ['Hyd_PressOilDif', 'bar']
     # ,1001101: 'RMD_ListBuffMAvgOilConsume_OilConsumption'
 }
 
-df = e.batch_hist_dataItems(
+df = e.hist_data(
     itemIds=dat,
     p_from=arrow.get(arrow.get(e.valstart_ts)),
     # p_from=arrow.now('Europe/Vienna').shift(weeks=-3),
     p_to=arrow.now('Europe/Vienna'),
-    timeCycle=10*60)
+    timeCycle=30)
 
 
 # Set Type of time column to DateTime
@@ -106,9 +108,12 @@ dfp.set_index('datetime')
 
 dmyplant2.chart(dfp, [
     {'col': ['PowerAct'], 'ylim': [0, 5000], 'color': 'black'},
-    {'col': ['CountOph'], 'ylim': [0, 500]},
-    {'col': ['Hyd_PressCrankCase'], 'ylim': [-50, 0]},
+    {'col': ['CountOph'], 'ylim': [0, 1000]},
+    {'col': ['Hyd_PressCrankCase'], 'ylim': [-50, 50]},
     {'col': ['Hyd_PressOilDif'], 'ylim': [0, 1]}
-])
+],
+    title=e,
+    figsize=(12, 8)
+)
 
 plt.show()
