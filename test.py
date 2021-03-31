@@ -7,6 +7,9 @@ from tabulate import tabulate
 import logging
 import sys
 import traceback
+import warnings
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+
 
 logging.basicConfig(
     filename='dmyplant.log',
@@ -47,20 +50,19 @@ def main():
 
         # define and downlad data for plot
         dat = {
-            # 161: 'CountOph',
-            102: 'PowerAct',
-            # 217: 'Hyd_PressCrankCase',
-            # 16546: 'Hyd_PressOilDif'
+            161: ['CountOph', 'h'],
+            102: ['PowerAct', 'kW'],
+            217: ['Hyd_PressCrankCase', 'mbar'],
+            16546: ['Hyd_PressOilDif', 'bar']
         }
 
-        df = e.batch_hist_dataItems(
+        df = e.hist_data(
             itemIds=dat,
-            # p_from=arrow.get(e.val_start).to('Europe/Vienna'),
+            p_from=arrow.get(e.val_start).to('Europe/Vienna'),
             # p_from=arrow.get(
             #    '2021-01-03 07:00').to('Europe/Vienna'),
             # p_to=arrow.now('Europe/Vienna'),
             p_to=arrow.get('2021-03-06 00:00').to('Europe/Vienna'),
-            p_limit=40000,
             timeCycle=3600  # sec. adjust the intevall if you get errors
         )
 
